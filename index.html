@@ -294,6 +294,7 @@
             <th onclick="sortBy('forecastStatus')">Forecast <span id="sort-forecastStatus"></span></th>
             <th onclick="sortBy('estimatedValue')">Value <span id="sort-estimatedValue"></span></th>
             <th onclick="sortBy('expectedCloseDate')">Close Date <span id="sort-expectedCloseDate"></span></th>
+            <th onclick="sortBy('createdDate')">Date Added <span id="sort-createdDate"></span></th>
             <th onclick="sortBy('opportunityOwner')">Owner <span id="sort-opportunityOwner"></span></th>
             <th onclick="sortBy('dateOfLastContact')">Last Contact <span id="sort-dateOfLastContact"></span></th>
             <th></th>
@@ -414,8 +415,8 @@ let updatingId = null;
 // ── Google Sheets Shared Backend ──
 // 1) Deploy the included Google Apps Script as a Web App.
 // 2) Paste the deployed Web App URL between the quotes below.
-// Example: const API_URL = 'https://script.google.com/macros/s/AKfycbxYo7wAk3-AoAtf6PVuHjIUxW90OwEkQ07B7IFPQBwadjQAPvEpb3HlCqgiEvXsDyJB/exec';
-const API_URL = 'https://script.google.com/macros/s/AKfycbxYo7wAk3-AoAtf6PVuHjIUxW90OwEkQ07B7IFPQBwadjQAPvEpb3HlCqgiEvXsDyJB/exec'
+// Example: const API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxYo7wAk3-AoAtf6PVuHjIUxW90OwEkQ07B7IFPQBwadjQAPvEpb3HlCqgiEvXsDyJB/exec';
 
 function apiConfigured() {
   return API_URL && !API_URL.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE');
@@ -592,6 +593,7 @@ function renderList() {
       <td>${forecastChip(d.forecastStatus)}</td>
       <td class="${d.estimatedValue>0?'td-value':'td-dash'}">${fmtVal(d.estimatedValue)}</td>
       <td style="color:#4B5563;font-size:12px;">${fmtDate(d.expectedCloseDate)}</td>
+      <td style="color:#9CA3AF;font-size:12px;">${fmtDate(d.createdDate)}</td>
       <td>
         <div class="owner-badge">
           <div class="owner-avatar">${initials(d.opportunityOwner)}</div>
@@ -621,7 +623,7 @@ function renderAll() {
   renderKPIs();
   renderBoard();
   if (currentView==='list') renderList();
-  document.getElementById('footerInfo').textContent = `${getFiltered().length} of ${deals.length} opportunities shown · Updates saved in your browser`;
+  document.getElementById('footerInfo').textContent = `${getFiltered().length} of ${deals.length} opportunities shown · Data saved in shared Google Sheet`;
 }
 
 // ── Detail Modal ──
@@ -660,7 +662,7 @@ function openDetail(id) {
       <div class="detail-grid">
         <div>
           <div class="detail-section-label">Deal Details</div>
-          ${[['Value',fmtVal(d.estimatedValue)],['Close Date',fmtDate(d.expectedCloseDate)],['Owner',d.opportunityOwner||'—'],['Last Contact',fmtDate(d.dateOfLastContact)]].map(([k,v])=>`<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
+          ${[['Value',fmtVal(d.estimatedValue)],['Close Date',fmtDate(d.expectedCloseDate)],['Date Added',fmtDate(d.createdDate)],['Owner',d.opportunityOwner||'—'],['Last Contact',fmtDate(d.dateOfLastContact)]].map(([k,v])=>`<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
         </div>
         <div>
           <div class="detail-section-label">Primary Contact</div>
@@ -707,6 +709,7 @@ function renderForm(d) {
         <div class="form-field"><label class="field-label">Deal Stage</label><select class="field-select" id="f_dealStage"><option value="">— Select —</option>${sel(STAGES,d.dealStage)}</select></div>
         <div class="form-field"><label class="field-label">Expected Close Date</label><input class="field-input" id="f_expectedCloseDate" type="date" value="${d.expectedCloseDate||''}"></div>
         <div class="form-field"><label class="field-label">Estimated Value ($)</label><input class="field-input" id="f_estimatedValue" type="number" value="${d.estimatedValue||0}" placeholder="0"></div>
+        ${!isNew?`<div class="form-field"><label class="field-label">Date Added</label><input class="field-input" value="${fmtDate(d.createdDate)}" disabled></div>`:''}
         <div class="form-field full"><label class="field-label">Opportunity Owner</label><select class="field-select" id="f_opportunityOwner"><option value="">— Select —</option>${sel(OWNERS,d.opportunityOwner)}</select></div>
       </div>
       <div class="form-section-label">Contact Information</div>
@@ -735,6 +738,7 @@ async function saveDeal() {
   if (!accountName) { alert('Account Name is required.'); return; }
   const updated = {
     id: editingId || String(Date.now()),
+    createdDate: editingId ? (deals.find(d=>d.id===editingId)?.createdDate || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
     accountName, opportunityName:g('f_opportunityName'),
     forecastStatus:g('f_forecastStatus'), dealStage:g('f_dealStage'),
     expectedCloseDate:g('f_expectedCloseDate'), estimatedValue:Number(g('f_estimatedValue'))||0,
@@ -743,6 +747,7 @@ async function saveDeal() {
     primaryContactPhone:g('f_primaryContactPhone'), dateOfLastContact:g('f_dateOfLastContact'),
     nextAction:g('f_nextAction'), notes:g('f_notes'),
     updates: editingId ? (deals.find(d=>d.id===editingId)?.updates||[]) : [],
+    lastModified: new Date().toISOString()
   };
   if (editingId) { const i=deals.findIndex(d=>d.id===editingId); if(i>=0) deals[i]=updated; }
   else deals.push(updated);
@@ -801,7 +806,7 @@ async function saveUpdate() {
   if (i<0) return;
   const now = new Date();
   deals[i].updates = deals[i].updates||[];
-  deals[i].updates.push({ id:String(Date.now()), text, author, date:now.toISOString().split('T')[0], timestamp:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) });
+  deals[i].updates.push({ id:String(Date.now()), text, author, date:now.toISOString().split('T')[0], timestampISO:now.toISOString(), timestamp:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) });
   deals[i].dateOfLastContact = now.toISOString().split('T')[0];
   closeOverlay('updateOverlay'); renderAll();
   try { await apiRequest('addUpdate', { id: updatingId, update: deals[i].updates[deals[i].updates.length - 1] }); }

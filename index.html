@@ -311,7 +311,7 @@
   <!-- Footer -->
   <div class="footer">
     <div class="footer-info" id="footerInfo"></div>
-    <button class="btn-reset" onclick="resetData()">Reset to original data</button>
+    <span style="display:flex; gap:12px; align-items:center;"><button class="btn-reset" onclick="refreshSharedData()">Refresh shared data</button><button class="btn-reset" onclick="resetData()">Reset to original data</button></span>
   </div>
 </div>
 
@@ -411,12 +411,64 @@ let sortDir = 'asc';
 let editingId = null;
 let updatingId = null;
 
-// ── Load / Save ──
-function loadDeals() {
-  try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : INITIAL_DEALS.map(d=>({...d})); } catch { return INITIAL_DEALS.map(d=>({...d})); }
+// ── Google Sheets Shared Backend ──
+// 1) Deploy the included Google Apps Script as a Web App.
+// 2) Paste the deployed Web App URL between the quotes below.
+// Example: const API_URL = 'https://script.google.com/macros/s/AKfycbxYo7wAk3-AoAtf6PVuHjIUxW90OwEkQ07B7IFPQBwadjQAPvEpb3HlCqgiEvXsDyJB/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxYo7wAk3-AoAtf6PVuHjIUxW90OwEkQ07B7IFPQBwadjQAPvEpb3HlCqgiEvXsDyJB/exec'
+
+function apiConfigured() {
+  return API_URL && !API_URL.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE');
 }
-function saveDeals() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(deals)); } catch {} }
-function resetData() { if (confirm('Reset to original data? All edits and updates will be lost.')) { deals = INITIAL_DEALS.map(d=>({...d})); saveDeals(); renderAll(); } }
+
+async function apiRequest(action, payload = {}) {
+  if (!apiConfigured()) throw new Error('Google Apps Script URL is not configured.');
+  const separator = API_URL.includes('?') ? '&' : '?';
+  const url = `${API_URL}${separator}action=${encodeURIComponent(action)}`;
+  const options = action === 'list'
+    ? { method: 'GET' }
+    : {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, ...payload })
+      };
+  const response = await fetch(url, options);
+  const result = await response.json();
+  if (!result.success) throw new Error(result.error || 'The shared Google Sheet request failed.');
+  return result;
+}
+
+async function loadDeals() {
+  if (!apiConfigured()) {
+    console.warn('API_URL is not configured. Showing the built-in starter data only.');
+    return INITIAL_DEALS.map(d => ({ ...d }));
+  }
+  try {
+    const result = await apiRequest('list');
+    return Array.isArray(result.deals) ? result.deals : [];
+  } catch (err) {
+    alert('Could not load shared CRM data from Google Sheets. Showing starter data for now.\n\n' + err.message);
+    return INITIAL_DEALS.map(d => ({ ...d }));
+  }
+}
+
+async function resetData() {
+  if (!confirm('Replace the shared Google Sheet data with the original starter data? This will overwrite shared edits.')) return;
+  deals = INITIAL_DEALS.map(d => ({ ...d }));
+  renderAll();
+  if (!apiConfigured()) { alert('Paste your Google Apps Script Web App URL into API_URL first.'); return; }
+  try {
+    await apiRequest('replaceAll', { deals });
+    alert('Shared Google Sheet has been reset to the original data.');
+  } catch (err) {
+    alert('Reset failed: ' + err.message);
+  }
+}
+
+async function refreshSharedData() {
+  deals = await loadDeals();
+  renderAll();
+}
 
 // ── Helpers ──
 function fmtVal(v) { if (!v || v==0) return '—'; if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M'; return '$'+Number(v).toLocaleString(); }
@@ -677,7 +729,7 @@ function renderForm(d) {
     </div>`;
 }
 
-function saveDeal() {
+async function saveDeal() {
   const g = id => document.getElementById(id)?.value||'';
   const accountName = g('f_accountName').trim();
   if (!accountName) { alert('Account Name is required.'); return; }
@@ -694,11 +746,20 @@ function saveDeal() {
   };
   if (editingId) { const i=deals.findIndex(d=>d.id===editingId); if(i>=0) deals[i]=updated; }
   else deals.push(updated);
-  saveDeals(); closeOverlay('formOverlay'); renderAll();
+  closeOverlay('formOverlay'); renderAll();
+  try { await apiRequest('upsert', { deal: updated }); }
+  catch (err) { alert('This change did not save to the shared Google Sheet: ' + err.message); }
+  await refreshSharedData();
 }
 
-function deleteDeal(id) {
-  if (confirm('Remove this opportunity?')) { deals=deals.filter(d=>d.id!==id); saveDeals(); renderAll(); }
+async function deleteDeal(id) {
+  if (!confirm('Remove this opportunity from the shared CRM?')) return;
+  const previous = deals.map(d => ({ ...d }));
+  deals = deals.filter(d => d.id !== id);
+  renderAll();
+  try { await apiRequest('delete', { id }); }
+  catch (err) { deals = previous; renderAll(); alert('Delete failed: ' + err.message); }
+  await refreshSharedData();
 }
 
 // ── Update Modal ──
@@ -732,7 +793,7 @@ function openUpdate(id) {
   openOverlay('updateOverlay');
 }
 
-function saveUpdate() {
+async function saveUpdate() {
   const text = (document.getElementById('u_text')?.value||'').trim();
   const author = document.getElementById('u_author')?.value||'Team';
   if (!text) { alert('Please enter an update.'); return; }
@@ -742,7 +803,10 @@ function saveUpdate() {
   deals[i].updates = deals[i].updates||[];
   deals[i].updates.push({ id:String(Date.now()), text, author, date:now.toISOString().split('T')[0], timestamp:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) });
   deals[i].dateOfLastContact = now.toISOString().split('T')[0];
-  saveDeals(); closeOverlay('updateOverlay'); renderAll();
+  closeOverlay('updateOverlay'); renderAll();
+  try { await apiRequest('addUpdate', { id: updatingId, update: deals[i].updates[deals[i].updates.length - 1] }); }
+  catch (err) { alert('This update did not save to the shared Google Sheet: ' + err.message); }
+  await refreshSharedData();
 }
 
 // ── Overlay helpers ──
@@ -751,8 +815,10 @@ function closeOverlay(id) { document.getElementById(id).classList.remove('open')
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open')); });
 
 // ── Init ──
-deals = loadDeals();
-renderAll();
+(async function initApp() {
+  deals = await loadDeals();
+  renderAll();
+})();
 </script>
 </body>
 </html>

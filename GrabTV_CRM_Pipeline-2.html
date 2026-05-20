@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrabTV — Pipeline CRM 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple: #6B5CE7;
+    --purple-dark: #1A1040;
+    --purple-light: #8B7FF0;
+    --purple-pale: #F0EEFF;
+    --navy: #0D0B21;
+    --accent: #C4B5FD;
+    --white: #FFFFFF;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-400: #9CA3AF;
+    --gray-600: #4B5563;
+    --gray-800: #1F2937;
+    --green: #10B981;
+    --green-light: #D1FAE5;
+    --yellow: #F59E0B;
+    --yellow-light: #FEF3C7;
+    --red: #EF4444;
+    --red-light: #FEE2E2;
+    --blue: #3B82F6;
+    --blue-light: #DBEAFE;
+    --orange: #F97316;
+    --orange-light: #FFEDD5;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header { background: var(--navy); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 28px; }
+  .header-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 68px; }
+  .logo img { height: 40px; width: auto; display: block; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .header-label { font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .btn-primary { padding: 9px 20px; background: var(--purple); border: none; border-radius: 8px; color: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(107,92,231,0.4); transition: background 0.15s; }
+  .btn-primary:hover { background: var(--purple-light); }
+
+  /* ── MAIN ── */
+  .main { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
+
+  /* ── KPI CARDS ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: flex-start; }
+  .kpi-card .kpi-label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-card .kpi-value { font-size: 22px; font-weight: 700; color: var(--navy); margin-top: 4px; }
+  .kpi-card .kpi-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+  .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+
+  /* ── CONTROLS ── */
+  .controls { background: white; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid var(--gray-100); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search-box { flex: 1; min-width: 200px; padding: 8px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; }
+  .search-box:focus { border-color: var(--purple); }
+  .filter-select { padding: 8px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--gray-600); background: white; cursor: pointer; outline: none; }
+  .filter-select:focus { border-color: var(--purple); }
+  .view-toggle { display: flex; gap: 4px; background: var(--gray-100); border-radius: 8px; padding: 3px; }
+  .view-btn { padding: 6px 14px; border-radius: 6px; border: none; background: transparent; color: var(--gray-400); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .view-btn.active { background: white; color: var(--navy); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* ── CHIPS ── */
+  .chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ── PIPELINE BOARD ── */
+  .board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 16px; }
+  .board::-webkit-scrollbar { height: 6px; }
+  .board::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 3px; }
+  .board::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+  .board-col { min-width: 240px; flex: 0 0 240px; }
+  .col-header { border-radius: 10px 10px 0 0; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .col-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+  .col-stats { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+  .col-val { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.06); }
+  .col-body { background: #F5F4FF; border-radius: 0 0 10px 10px; min-height: 200px; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .deal-card { background: white; border-radius: 10px; padding: 12px 14px; cursor: pointer; box-shadow: 0 1px 3px rgba(107,92,231,0.08); border: 1px solid var(--gray-100); transition: transform 0.12s, box-shadow 0.12s; }
+  .deal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(107,92,231,0.18); }
+  .deal-card .account { font-weight: 700; font-size: 13px; color: var(--navy); margin-bottom: 2px; }
+  .deal-card .opp-name { font-size: 11px; color: var(--gray-400); margin-bottom: 6px; }
+  .deal-card .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .deal-card .deal-value { font-size: 12px; font-weight: 700; color: var(--purple); }
+  .owner-badge { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; }
+  .owner-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--purple-pale); display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
+  .owner-name { font-size: 11px; color: var(--gray-400); }
+  .update-count { font-size: 10px; color: var(--gray-400); margin-top: 4px; }
+  .col-empty { font-size: 12px; color: var(--gray-400); text-align: center; padding: 20px 0; font-style: italic; }
+
+  /* ── LIST VIEW ── */
+  .list-table-wrap { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid var(--gray-100); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead tr { border-bottom: 2px solid var(--gray-100); }
+  th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; white-space: nowrap; user-select: none; }
+  th:hover { color: var(--purple); }
+  tbody tr { border-bottom: 1px solid var(--gray-100); cursor: pointer; transition: background 0.1s; }
+  tbody tr:hover { background: var(--purple-pale) !important; }
+  tbody tr:nth-child(even) { background: var(--gray-50); }
+  td { padding: 11px 12px; font-size: 13px; }
+  .td-account { font-weight: 700; color: var(--navy); }
+  .td-opp { color: var(--gray-600); font-size: 12px; }
+  .td-value { font-weight: 600; color: var(--purple); }
+  .td-dash { color: var(--gray-400); }
+  .td-actions { display: flex; gap: 6px; }
+  .btn-sm { padding: 5px 10px; border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .btn-update { background: var(--purple-pale); color: var(--purple); }
+  .btn-delete { background: var(--red-light); color: var(--red); }
+  .no-results { padding: 48px 28px; text-align: center; color: var(--gray-400); }
+  .no-results-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── FOOTER ── */
+  .footer { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+  .footer-info { font-size: 11px; color: var(--gray-400); }
+  .btn-reset { font-size: 11px; color: var(--gray-400); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: 'DM Sans', sans-serif; }
+
+  /* ── MODAL OVERLAY ── */
+  .overlay { position: fixed; inset: 0; background: rgba(13,11,33,0.65); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: white; border-radius: 16px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(107,92,231,0.25); transform: translateY(12px); transition: transform 0.2s; }
+  .overlay.open .modal { transform: translateY(0); }
+  .modal.wide { max-width: 760px; }
+  .modal.narrow { max-width: 580px; }
+
+  /* Modal header */
+  .modal-hdr { padding: 22px 28px 18px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: flex-start; }
+  .modal-hdr-dark { background: var(--navy); border-radius: 16px 16px 0 0; padding: 24px 28px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .modal-label { font-size: 11px; font-weight: 600; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .modal-label-white { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .modal-title-white { font-size: 20px; font-weight: 700; color: white; margin-bottom: 6px; }
+  .modal-subtitle { font-size: 13px; color: var(--accent); }
+  .modal-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--gray-400); padding: 2px; line-height: 1; }
+  .modal-close-white { background: none; border: none; cursor: pointer; font-size: 20px; color: rgba(255,255,255,0.5); padding: 2px; line-height: 1; }
+  .modal-hdr-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-outline-white { padding: 7px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  /* Modal body */
+  .modal-body { padding: 24px 28px; }
+  .modal-footer { padding: 14px 28px 22px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-cancel { padding: 9px 20px; border: 1.5px solid var(--gray-200); border-radius: 8px; background: white; color: var(--gray-600); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-save { padding: 9px 24px; border: none; border-radius: 8px; background: var(--purple); color: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-save:disabled { background: var(--gray-200); cursor: default; }
+
+  /* Form */
+  .form-section-label { font-size: 12px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--purple-pale); padding-bottom: 8px; margin-bottom: 14px; margin-top: 4px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .field-label { font-size: 11px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; }
+  .field-label span { color: var(--purple); }
+  .field-input, .field-select, .field-textarea { width: 100%; padding: 8px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--gray-800); background: white; outline: none; transition: border-color 0.15s; }
+  .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--purple); }
+  .field-textarea { resize: vertical; }
+
+  /* Detail modal */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+  .detail-section-label { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-100); }
+  .detail-key { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+  .detail-val { font-size: 13px; color: var(--gray-800); font-weight: 600; text-align: right; max-width: 60%; }
+  .contact-card { background: var(--purple-pale); border-radius: 10px; padding: 14px 16px; }
+  .contact-name { font-weight: 700; color: var(--navy); font-size: 14px; }
+  .contact-title { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .contact-email { font-size: 12px; color: var(--purple); margin-top: 8px; }
+  .contact-phone { font-size: 12px; color: var(--gray-600); margin-top: 4px; }
+  .no-contact { font-size: 13px; color: var(--gray-400); font-style: italic; }
+  .info-box { border-radius: 10px; padding: 12px 14px; }
+  .info-box-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+  .info-box-text { font-size: 13px; color: var(--gray-800); line-height: 1.5; white-space: pre-wrap; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+
+  /* Activity log */
+  .activity-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .activity-log { display: flex; flex-direction: column; gap: 10px; }
+  .update-item { background: var(--purple-pale); border-radius: 10px; padding: 12px 14px; border-left: 3px solid var(--purple); }
+  .update-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .update-author { font-size: 11px; font-weight: 700; color: var(--purple); }
+  .update-time { font-size: 11px; color: var(--gray-400); }
+  .update-text { font-size: 13px; color: var(--gray-800); line-height: 1.5; white-space: pre-wrap; }
+  .no-updates { font-size: 13px; color: var(--gray-400); font-style: italic; }
+
+  /* Chip colors by stage */
+  .stage-Prospecting { background: #EDE9FE; color: #5B21B6; }
+  .stage-dot-Prospecting { background: #7C3AED; }
+  .stage-Discovery { background: #DBEAFE; color: #1E40AF; }
+  .stage-dot-Discovery { background: #3B82F6; }
+  .stage-Demo { background: #FEF3C7; color: #92400E; }
+  .stage-dot-Demo { background: #F59E0B; }
+  .stage-Proposal { background: #FFE4E6; color: #9F1239; }
+  .stage-dot-Proposal { background: #F43F5E; }
+  .stage-Verbal { background: #D1FAE5; color: #065F46; }
+  .stage-dot-Verbal { background: #10B981; }
+  .stage-Negotiation { background: #FEF3C7; color: #92400E; }
+  .stage-dot-Negotiation { background: #F59E0B; }
+  .stage-Won { background: #D1FAE5; color: #065F46; }
+  .stage-dot-Won { background: #059669; }
+  .stage-Lost { background: #F3F4F6; color: #6B7280; }
+  .stage-dot-Lost { background: #9CA3AF; }
+
+  .forecast-Committed { background: #D1FAE5; color: #065F46; }
+  .forecast-Upside { background: #DBEAFE; color: #1E40AF; }
+  .forecast-Uncommitted { background: #FEF3C7; color: #92400E; }
+  .forecast-Pipeline { background: #F3F4F6; color: #374151; }
+  .forecast-Risk { background: #FFE4E6; color: #9F1239; }
+
+  @media (max-width: 768px) {
+    .header { padding: 0 16px; }
+    .main { padding: 16px; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .controls { gap: 8px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+    .modal-body { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <img src="data:image/png;base64,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" alt="GrabTV" />
+    </div>
+    <div class="header-right">
+      <span class="header-label">Pipeline CRM 2026</span>
+      <button class="btn-primary" onclick="openNewDeal()">+ New Opportunity</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- KPI Row -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input class="search-box" type="text" placeholder="🔍  Search accounts, contacts, owners..." id="searchInput" oninput="renderAll()">
+    <select class="filter-select" id="filterStage" onchange="renderAll()">
+      <option value="">All Stages</option>
+      <option>Prospecting</option>
+      <option>Discovery</option>
+      <option>Demo / Evaluation</option>
+      <option>Proposal Sent</option>
+      <option>Negotiation</option>
+      <option>Verbal Commit</option>
+      <option>Closed Won</option>
+      <option>Closed Lost</option>
+    </select>
+    <select class="filter-select" id="filterForecast" onchange="renderAll()">
+      <option value="">All Forecasts</option>
+      <option>Committed</option>
+      <option>Committed at Risk</option>
+      <option>Upside</option>
+      <option>Uncommitted</option>
+      <option>Pipeline</option>
+    </select>
+    <select class="filter-select" id="filterOwner" onchange="renderAll()">
+      <option value="">All Owners</option>
+      <option>Danielle Estrada</option>
+      <option>Lamar Chase</option>
+      <option>Justin Johnson</option>
+      <option>Lincoln Berry III</option>
+      <option>Rob Kennedy</option>
+      <option>Greg Johnson</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnBoard" onclick="setView('board')">⬛ Board</button>
+      <button class="view-btn" id="btnList" onclick="setView('list')">☰ List</button>
+    </div>
+  </div>
+
+  <!-- Board View -->
+  <div id="boardView" class="board"></div>
+
+  <!-- List View -->
+  <div id="listView" style="display:none;">
+    <div class="list-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('accountName')">Account <span id="sort-accountName"></span></th>
+            <th onclick="sortBy('opportunityName')">Opportunity <span id="sort-opportunityName"></span></th>
+            <th onclick="sortBy('dealStage')">Stage <span id="sort-dealStage"></span></th>
+            <th onclick="sortBy('forecastStatus')">Forecast <span id="sort-forecastStatus"></span></th>
+            <th onclick="sortBy('estimatedValue')">Value <span id="sort-estimatedValue"></span></th>
+            <th onclick="sortBy('expectedCloseDate')">Close Date <span id="sort-expectedCloseDate"></span></th>
+            <th onclick="sortBy('opportunityOwner')">Owner <span id="sort-opportunityOwner"></span></th>
+            <th onclick="sortBy('dateOfLastContact')">Last Contact <span id="sort-dateOfLastContact"></span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="listBody"></tbody>
+      </table>
+      <div class="no-results" id="noResults" style="display:none;">
+        <div class="no-results-icon">📭</div>
+        <div style="font-size:14px;font-weight:600;">No opportunities match your filters</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-info" id="footerInfo"></div>
+    <button class="btn-reset" onclick="resetData()">Reset to original data</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay" onclick="closeOverlay('detailOverlay')">
+  <div class="modal wide" onclick="event.stopPropagation()" id="detailModal"></div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="overlay" id="formOverlay" onclick="closeOverlay('formOverlay')">
+  <div class="modal" onclick="event.stopPropagation()" id="formModal"></div>
+</div>
+
+<!-- UPDATE MODAL -->
+<div class="overlay" id="updateOverlay" onclick="closeOverlay('updateOverlay')">
+  <div class="modal narrow" onclick="event.stopPropagation()" id="updateModal"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'grabtv_crm_v3';
+const STAGES = ['Prospecting','Discovery','Demo / Evaluation','Proposal Sent','Negotiation','Verbal Commit','Closed Won','Closed Lost'];
+const FORECASTS = ['Committed','Committed at Risk','Upside','Uncommitted','Pipeline'];
+const OWNERS = ['Danielle Estrada','Lamar Chase','Justin Johnson','Lincoln Berry III','Rob Kennedy','Greg Johnson'];
+
+const STAGE_STYLE = {
+  'Prospecting':      {bg:'#EDE9FE',text:'#5B21B6',dot:'#7C3AED'},
+  'Discovery':        {bg:'#DBEAFE',text:'#1E40AF',dot:'#3B82F6'},
+  'Demo / Evaluation':{bg:'#FEF3C7',text:'#92400E',dot:'#F59E0B'},
+  'Proposal Sent':    {bg:'#FFE4E6',text:'#9F1239',dot:'#F43F5E'},
+  'Negotiation':      {bg:'#FEF3C7',text:'#92400E',dot:'#D97706'},
+  'Verbal Commit':    {bg:'#D1FAE5',text:'#065F46',dot:'#10B981'},
+  'Closed Won':       {bg:'#D1FAE5',text:'#065F46',dot:'#059669'},
+  'Closed Lost':      {bg:'#F3F4F6',text:'#6B7280',dot:'#9CA3AF'},
+};
+const FORECAST_STYLE = {
+  'Committed':        {bg:'#D1FAE5',text:'#065F46'},
+  'Committed at Risk':{bg:'#FFE4E6',text:'#9F1239'},
+  'Upside':           {bg:'#DBEAFE',text:'#1E40AF'},
+  'Uncommitted':      {bg:'#FEF3C7',text:'#92400E'},
+  'Pipeline':         {bg:'#F3F4F6',text:'#374151'},
+};
+
+const INITIAL_DEALS = [
+  {id:'1',accountName:'Seattle Mariners',opportunityName:'Fan Engagement POC_Azure',forecastStatus:'Upside',dealStage:'Negotiation',expectedCloseDate:'2027-01-01',estimatedValue:250000,opportunityOwner:'Danielle Estrada',primaryContactName:'Ingrid Narcisse',primaryContactTitle:'Sr Director Corporate Partnerships Strategy & Activation',primaryContactEmail:'IRussellNarcisse@mariners.com',primaryContactPhone:'(206) 346-4479',dateOfLastContact:'2026-02-27',nextAction:'Schedule weekly cadence leading up to POC',notes:'0302: Schedule follow up meeting with JT. Ingrid will influence leadership to proceed with something.\n0227: Response from JT, after submitting slides and GTV overview. Scheduling follow up to discuss scope and next steps.\n0202: Email sent to Ingrid, awaiting follow up reply.',updates:[]},
+  {id:'2',accountName:'Seattle Mariners',opportunityName:'T-Commerce_Azure',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2027-01-01',estimatedValue:500000,opportunityOwner:'Danielle Estrada',primaryContactName:'Ingrid Narcisse',primaryContactTitle:'Sr Director Corporate Partnerships Strategy & Activation',primaryContactEmail:'IRussellNarcisse@mariners.com',primaryContactPhone:'(206) 346-4479',dateOfLastContact:'2026-01-30',nextAction:'',notes:'0202: Follow on opportunity from Fan Engagement POC',updates:[]},
+  {id:'3',accountName:'Netflix (Justin Bieber)',opportunityName:'T-Commerce_Azure',forecastStatus:'Upside',dealStage:'Prospecting',expectedCloseDate:'2026-09-30',estimatedValue:0,opportunityOwner:'Justin Johnson',primaryContactName:'Isaiah "Zay" Reese',primaryContactTitle:'Partner & Chief Strategy Officer',primaryContactEmail:'isaiah@weareglenhouse.com',primaryContactPhone:'(424) 303-3341',dateOfLastContact:'',nextAction:'',notes:'0302: Fashion opportunity between Bieber and Netflix. Need strategy. Doing a show to overlay Grab w/Netflix.',updates:[]},
+  {id:'4',accountName:'Netflix Gaming',opportunityName:'T-Commerce_Azure',forecastStatus:'Uncommitted',dealStage:'Discovery',expectedCloseDate:'2026-12-31',estimatedValue:0,opportunityOwner:'Lamar Chase',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'0302: Interactive gaming, mobile. Lincoln to look for synergies. Very early stages.',updates:[]},
+  {id:'5',accountName:'Sinclair Broadcast',opportunityName:'T-Commerce_Azure',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2026-06-30',estimatedValue:500000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'2026-01-30',nextAction:'Account team planning meeting to prepare for customer introduction',notes:'0302: Need Lamar\'s previous contact. Danielle to contact the Microsoft CSAM.\n0227: Multiple follow ups to Microsoft. Per Deana client has gone silent. Working to connect at NAB.\n0202: Email to Deanna to coordinate intros.',updates:[]},
+  {id:'6',accountName:'San Diego Wave',opportunityName:'Fan Engagement POC_Azure',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2026-12-31',estimatedValue:500000,opportunityOwner:'Danielle Estrada',primaryContactName:'Alyssa Haynes (Maitoza)',primaryContactTitle:'Sr. Director, Head of Corporate Partnerships',primaryContactEmail:'ahaynes@wavefc.com',primaryContactPhone:'(831) 227-3001',dateOfLastContact:'2026-02-02',nextAction:'',notes:'0227: Met with Ian who leads data analytics. He is reviewing slides and scheduling follow up.\n0202: Alyssa reached out and introduced Jaime Kelm, head of BI to discuss their FanReach strategy.',updates:[]},
+  {id:'7',accountName:'Allen Media Group',opportunityName:'T-Commerce_Azure',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2026-12-31',estimatedValue:0,opportunityOwner:'Justin Johnson/Lamar Chase',primaryContactName:'Shannon Henderson',primaryContactTitle:'Director, Marketing & Community Engagement',primaryContactEmail:'s.henderson@hbcugo.tv',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'0302: Waiting to hear back from Shannon. Justin spoke to them. Were not ready previously. She asked to look into partners that host their app. Justin meeting with her on 03/04/26.',updates:[]},
+  {id:'8',accountName:'Amazon',opportunityName:'',forecastStatus:'Uncommitted',dealStage:'Discovery',expectedCloseDate:'2026-12-31',estimatedValue:0,opportunityOwner:'Justin Johnson',primaryContactName:'Wayne Purboo',primaryContactTitle:'VP Advertising',primaryContactEmail:'wpurboo@amazon.com',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'0302: Pause until on AWS Marketplace.',updates:[]},
+  {id:'9',accountName:'WARNER BROS DISCOVERY',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'10',accountName:'PEARSON INC',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'11',accountName:'Tegna',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'12',accountName:'Mediacom',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'13',accountName:'Warner Music Group',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'14',accountName:'PENN NATIONAL GAMING',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'15',accountName:'Sirius XM',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'16',accountName:'CommScope',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'17',accountName:'Crown Castle',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'18',accountName:'CUMULUS MEDIA INC',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'19',accountName:'NEWS CORPORATION LTD',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'20',accountName:'PGA TOUR',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Danielle Estrada',primaryContactName:'Deanna Anderson',primaryContactTitle:'Sr. Specialist - ISD',primaryContactEmail:'dander@microsoft.com',primaryContactPhone:'(701) 492-6875',dateOfLastContact:'',nextAction:'Placeholder for new customer lead',notes:'',updates:[]},
+  {id:'21',accountName:'Cleveland Cavaliers',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:150000,opportunityOwner:'Justin Johnson',primaryContactName:'Cory Tincher',primaryContactTitle:'Partner',primaryContactEmail:'cory@detroit.vc',primaryContactPhone:'(313) 909-9121',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'22',accountName:'Rocket Mortgage',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Discovery',expectedCloseDate:'2026-09-30',estimatedValue:0,opportunityOwner:'Justin Johnson',primaryContactName:'Cory Tincher',primaryContactTitle:'Partner',primaryContactEmail:'cory@detroit.vc',primaryContactPhone:'(313) 909-9121',dateOfLastContact:'',nextAction:'',notes:'0302: Holding to reach out to. Waiting to hear back from Amazon. Move forward. Develop strategy.',updates:[]},
+  {id:'23',accountName:'Detroit Ventures',opportunityName:'Strategic Investment',forecastStatus:'Uncommitted',dealStage:'Discovery',expectedCloseDate:'2026-09-30',estimatedValue:30000000,opportunityOwner:'Justin Johnson',primaryContactName:'Cory Tincher',primaryContactTitle:'Partner',primaryContactEmail:'cory@detroit.vc',primaryContactPhone:'(313) 909-9121',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'24',accountName:'Vayner Sports',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Justin Johnson',primaryContactName:'Ian La Cava',primaryContactTitle:'VP, Consulting',primaryContactEmail:'ian@vaynersports.com',primaryContactPhone:'(480) 221-7434',dateOfLastContact:'',nextAction:'',notes:'0302: DE to follow up with Ian on contact and next steps.\n0227: Initial client meeting. Deck sent and giving time to schedule follow up.',updates:[]},
+  {id:'25',accountName:'Popmart',opportunityName:'',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2026-09-30',estimatedValue:5000000,opportunityOwner:'Justin Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'0227: Preparing for client meeting. Ideation in progress with potential activations across multiple lines of business.',updates:[]},
+  {id:'26',accountName:'Teli - Insignia',opportunityName:'T-Commerce License',forecastStatus:'Uncommitted',dealStage:'Proposal Sent',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Lincoln Berry III/Lamar Chase',primaryContactName:'Modani',primaryContactTitle:'Friend Of Lamar',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'Insignia is a consumer electronics brand. GrabTV has the opportunity to "OEM Embed" the click into their line of Smart TVs.',updates:[]},
+  {id:'27',accountName:'Ye France Tour',opportunityName:'T-Commerce_POC',forecastStatus:'Committed',dealStage:'Verbal Commit',expectedCloseDate:'2026-04-15',estimatedValue:500000,opportunityOwner:'Justin Johnson',primaryContactName:'Richard Bucks',primaryContactTitle:'Owner of Earnest Promotions',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'Meeting next week 03/09',notes:'0302: Justin connection. Confirmed June 11th event. Need to present tech. $25k per show for platform access. $2 per click, 10% rev share on all merch purchased. 67,000 fans per show. Part 2 is stream of concert.',updates:[]},
+  {id:'28',accountName:'Ye France Tour',opportunityName:'T-Commerce_Azure',forecastStatus:'Upside',dealStage:'Prospecting',expectedCloseDate:'2026-06-30',estimatedValue:10000000,opportunityOwner:'Justin Johnson',primaryContactName:'Richard Bucks',primaryContactTitle:'Owner of Earnest Promotions',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'29',accountName:'ATSC 3.0',opportunityName:'Open Standards for Transactional Television',forecastStatus:'Committed',dealStage:'Closed Won',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson',primaryContactName:'Madeline Noland',primaryContactTitle:'President',primaryContactEmail:'mnoland@atsc.org',primaryContactPhone:'(202) 872-9160',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'30',accountName:'Gray Media',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:500000,opportunityOwner:'Greg Johnson',primaryContactName:'Robert Folliard',primaryContactTitle:'SVP Government Relations & Distribution',primaryContactEmail:'robert.folliard@gray.tv',primaryContactPhone:'(404) 504-9828',dateOfLastContact:'',nextAction:'',notes:'0302: NextGen TV opportunity.',updates:[]},
+  {id:'31',accountName:'E. W. Scripps',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:500000,opportunityOwner:'Greg Johnson',primaryContactName:'Kerry Oslund',primaryContactTitle:'Vice President of Strategy and Business Development',primaryContactEmail:'kerry.oslund@scripps.com',primaryContactPhone:'(703) 944-9822',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'32',accountName:'Graham Media Group',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:500000,opportunityOwner:'Greg Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'33',accountName:'Fincons',opportunityName:'T-Commerce License',forecastStatus:'Committed at Risk',dealStage:'Verbal Commit',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson/Lincoln Berry III',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'34',accountName:'Velope',opportunityName:'T-Commerce License',forecastStatus:'Committed at Risk',dealStage:'Verbal Commit',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson/Lincoln Berry III',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'35',accountName:'LG (Consumer Electronics Division)',opportunityName:'T-Commerce License',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'36',accountName:'Samsung (Consumer Electronics Division)',opportunityName:'T-Commerce License',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'37',accountName:'Video Storm',opportunityName:'T-Commerce License',forecastStatus:'Committed at Risk',dealStage:'Verbal Commit',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson',primaryContactName:'David Sidman',primaryContactTitle:'Founder & CAO',primaryContactEmail:'dsidman@videostorm.com',primaryContactPhone:'(212) 792-1847',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'38',accountName:'Pearl TV',opportunityName:'Strategic Partner',forecastStatus:'Committed',dealStage:'Verbal Commit',expectedCloseDate:'',estimatedValue:0,opportunityOwner:'Greg Johnson',primaryContactName:'Anne Schelle',primaryContactTitle:'Managing Director',primaryContactEmail:'anne.schelle@pearltv.com',primaryContactPhone:'(443) 857-0200',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'39',accountName:'All Sports Television Network',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Committed',dealStage:'Verbal Commit',expectedCloseDate:'',estimatedValue:200000,opportunityOwner:'Greg Johnson',primaryContactName:'Roger Neal Smith',primaryContactTitle:'CEO',primaryContactEmail:'roger.smith@all-sportstv.net',primaryContactPhone:'(747) 234-7902',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'40',accountName:'TV Jamaica',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'',estimatedValue:100000,opportunityOwner:'Greg Johnson',primaryContactName:'Gary Allen',primaryContactTitle:'Senior Executive Corporate & External Affairs',primaryContactEmail:'gary.allen@rjrgleaner.com',primaryContactPhone:'(876) 733-2606',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'41',accountName:'Walmart/Vizio',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Upside',dealStage:'Prospecting',expectedCloseDate:'2026-09-30',estimatedValue:200000,opportunityOwner:'Justin Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'42',accountName:'Travis Scott',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Upside',dealStage:'Prospecting',expectedCloseDate:'2026-09-30',estimatedValue:200000,opportunityOwner:'Justin Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'43',accountName:'Walmart/Vizio',opportunityName:'T-Commerce_Azure Full Deployment',forecastStatus:'Upside',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:1000000,opportunityOwner:'Justin Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'44',accountName:'Travis Scott',opportunityName:'T-Commerce_Azure Full Deployment',forecastStatus:'Uncommitted',dealStage:'Prospecting',expectedCloseDate:'2026-12-31',estimatedValue:1000000,opportunityOwner:'Justin Johnson',primaryContactName:'',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'45',accountName:'Icon',opportunityName:'T-Commerce_Azure POC',forecastStatus:'Committed',dealStage:'Discovery',expectedCloseDate:'2026-06-01',estimatedValue:200000,opportunityOwner:'Justin Johnson',primaryContactName:'Neal Carter',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+  {id:'46',accountName:'Icon',opportunityName:'T-Commerce_Azure Full Deployment',forecastStatus:'Upside',dealStage:'Discovery',expectedCloseDate:'2026-09-30',estimatedValue:1800000,opportunityOwner:'Justin Johnson',primaryContactName:'Neal Carter',primaryContactTitle:'',primaryContactEmail:'',primaryContactPhone:'',dateOfLastContact:'',nextAction:'',notes:'',updates:[]},
+];
+
+// ── State ──
+let deals = [];
+let currentView = 'board';
+let sortCol = 'accountName';
+let sortDir = 'asc';
+let editingId = null;
+let updatingId = null;
+
+// ── Load / Save ──
+function loadDeals() {
+  try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : INITIAL_DEALS.map(d=>({...d})); } catch { return INITIAL_DEALS.map(d=>({...d})); }
+}
+function saveDeals() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(deals)); } catch {} }
+function resetData() { if (confirm('Reset to original data? All edits and updates will be lost.')) { deals = INITIAL_DEALS.map(d=>({...d})); saveDeals(); renderAll(); } }
+
+// ── Helpers ──
+function fmtVal(v) { if (!v || v==0) return '—'; if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M'; return '$'+Number(v).toLocaleString(); }
+function fmtDate(d) { if (!d) return '—'; const p=d.split('-'); return p.length===3?`${p[1]}/${p[2]}/${p[0]}`:d; }
+function initials(name) { return (name||'').split(/[\s\/]+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?'; }
+
+function stageChip(stage) {
+  const s = STAGE_STYLE[stage]||{bg:'#F3F4F6',text:'#374151',dot:'#9CA3AF'};
+  return `<span class="chip" style="background:${s.bg};color:${s.text};"><span class="chip-dot" style="background:${s.dot};"></span>${stage||'—'}</span>`;
+}
+function forecastChip(f) {
+  const s = FORECAST_STYLE[f]||{bg:'#F3F4F6',text:'#374151'};
+  return `<span class="chip" style="background:${s.bg};color:${s.text};">${f||'—'}</span>`;
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const fs = document.getElementById('filterStage').value;
+  const ff = document.getElementById('filterForecast').value;
+  const fo = document.getElementById('filterOwner').value;
+  return deals.filter(d=>{
+    if (q && !`${d.accountName} ${d.opportunityName} ${d.primaryContactName} ${d.opportunityOwner}`.toLowerCase().includes(q)) return false;
+    if (fs && d.dealStage!==fs) return false;
+    if (ff && d.forecastStatus!==ff) return false;
+    if (fo && !d.opportunityOwner.includes(fo)) return false;
+    return true;
+  });
+}
+
+// ── KPIs ──
+function renderKPIs() {
+  const total = deals.length;
+  const totalVal = deals.reduce((s,d)=>s+Number(d.estimatedValue||0),0);
+  const committed = deals.filter(d=>d.forecastStatus==='Committed').reduce((s,d)=>s+Number(d.estimatedValue||0),0);
+  const upside = deals.filter(d=>d.forecastStatus==='Upside').reduce((s,d)=>s+Number(d.estimatedValue||0),0);
+  const cards = [
+    {label:'Total Opportunities',val:total,sub:`${getFiltered().length} visible`,icon:'📊',color:'#6B5CE7'},
+    {label:'Total Pipeline',val:fmtVal(totalVal),sub:'All active deals',icon:'💰',color:'#3B82F6'},
+    {label:'Committed',val:fmtVal(committed),sub:`${deals.filter(d=>d.forecastStatus==='Committed').length} deals`,icon:'✅',color:'#10B981'},
+    {label:'Upside',val:fmtVal(upside),sub:`${deals.filter(d=>d.forecastStatus==='Upside').length} deals`,icon:'📈',color:'#F59E0B'},
+  ];
+  document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+    <div class="kpi-card">
+      <div>
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value">${c.val}</div>
+        <div class="kpi-sub">${c.sub}</div>
+      </div>
+      <div class="kpi-icon" style="background:${c.color}18;">${c.icon}</div>
+    </div>`).join('');
+}
+
+// ── Board View ──
+function renderBoard() {
+  const filtered = getFiltered();
+  const board = document.getElementById('boardView');
+  const visStages = STAGES.filter(s=>s!=='Closed Lost');
+  board.innerHTML = visStages.map(stage=>{
+    const stageDeals = filtered.filter(d=>d.dealStage===stage);
+    const sv = stageDeals.reduce((s,d)=>s+Number(d.estimatedValue||0),0);
+    const ss = STAGE_STYLE[stage]||{bg:'#F3F4F6',text:'#6B7280',dot:'#9CA3AF'};
+    const cards = stageDeals.length===0
+      ? `<div class="col-empty">No deals</div>`
+      : stageDeals.map(d=>`
+        <div class="deal-card" onclick="openDetail('${d.id}')">
+          <div class="account">${d.accountName}</div>
+          ${d.opportunityName?`<div class="opp-name">${d.opportunityName}</div>`:''}
+          <div class="card-footer">
+            ${forecastChip(d.forecastStatus)}
+            ${d.estimatedValue>0?`<span class="deal-value">${fmtVal(d.estimatedValue)}</span>`:''}
+          </div>
+          ${d.opportunityOwner?`<div class="owner-badge"><div class="owner-avatar">${initials(d.opportunityOwner)}</div><span class="owner-name">${d.opportunityOwner.split('/')[0].split(' ')[0]}</span></div>`:''}
+          ${d.updates&&d.updates.length>0?`<div class="update-count">💬 ${d.updates.length} update${d.updates.length!==1?'s':''}</div>`:''}
+        </div>`).join('');
+    return `
+      <div class="board-col">
+        <div class="col-header" style="background:${ss.bg};">
+          <div class="col-title" style="color:${ss.text};">
+            <span style="width:7px;height:7px;border-radius:50%;background:${ss.dot};display:inline-block;"></span>
+            ${stage}
+          </div>
+          <div class="col-stats" style="color:${ss.text};">
+            <span style="opacity:0.7;">${stageDeals.length}</span>
+            ${sv>0?`<span class="col-val" style="color:${ss.text};">${fmtVal(sv)}</span>`:''}
+          </div>
+        </div>
+        <div class="col-body">${cards}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── List View ──
+function sortBy(col) {
+  if (sortCol===col) sortDir = sortDir==='asc'?'desc':'asc';
+  else { sortCol=col; sortDir='asc'; }
+  renderList();
+}
+function renderList() {
+  const filtered = getFiltered();
+  document.querySelectorAll('[id^="sort-"]').forEach(el=>el.textContent='');
+  const ind = document.getElementById(`sort-${sortCol}`);
+  if (ind) ind.textContent = sortDir==='asc'?' ↑':' ↓';
+
+  const sorted = [...filtered].sort((a,b)=>{
+    let av=a[sortCol]||'', bv=b[sortCol]||'';
+    if (sortCol==='estimatedValue'){av=Number(av);bv=Number(bv);}
+    if(av<bv) return sortDir==='asc'?-1:1;
+    if(av>bv) return sortDir==='asc'?1:-1;
+    return 0;
+  });
+
+  const body = document.getElementById('listBody');
+  const noRes = document.getElementById('noResults');
+  if (!sorted.length) { body.innerHTML=''; noRes.style.display='block'; return; }
+  noRes.style.display='none';
+  body.innerHTML = sorted.map((d,i)=>`
+    <tr onclick="openDetail('${d.id}')">
+      <td class="td-account">${d.accountName}</td>
+      <td class="td-opp">${d.opportunityName||'<span class="td-dash">—</span>'}</td>
+      <td>${stageChip(d.dealStage)}</td>
+      <td>${forecastChip(d.forecastStatus)}</td>
+      <td class="${d.estimatedValue>0?'td-value':'td-dash'}">${fmtVal(d.estimatedValue)}</td>
+      <td style="color:#4B5563;font-size:12px;">${fmtDate(d.expectedCloseDate)}</td>
+      <td>
+        <div class="owner-badge">
+          <div class="owner-avatar">${initials(d.opportunityOwner)}</div>
+          <span class="owner-name">${(d.opportunityOwner||'—').split('/')[0].split(' ')[0]}</span>
+        </div>
+      </td>
+      <td style="color:#9CA3AF;font-size:12px;">${fmtDate(d.dateOfLastContact)}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="td-actions">
+          <button class="btn-sm btn-update" onclick="openUpdate('${d.id}')">+ Update</button>
+          <button class="btn-sm btn-delete" onclick="deleteDeal('${d.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('boardView').style.display = v==='board'?'flex':'none';
+  document.getElementById('listView').style.display = v==='list'?'block':'none';
+  document.getElementById('btnBoard').className = 'view-btn'+(v==='board'?' active':'');
+  document.getElementById('btnList').className = 'view-btn'+(v==='list'?' active':'');
+  if (v==='list') renderList();
+}
+
+function renderAll() {
+  renderKPIs();
+  renderBoard();
+  if (currentView==='list') renderList();
+  document.getElementById('footerInfo').textContent = `${getFiltered().length} of ${deals.length} opportunities shown · Updates saved in your browser`;
+}
+
+// ── Detail Modal ──
+function openDetail(id) {
+  const d = deals.find(x=>x.id===id);
+  if (!d) return;
+  const ss = STAGE_STYLE[d.dealStage]||{bg:'#F3F4F6',text:'#374151',dot:'#9CA3AF'};
+  const updatesHTML = d.updates&&d.updates.length>0
+    ? [...d.updates].reverse().map(u=>`
+        <div class="update-item">
+          <div class="update-meta">
+            <span class="update-author">${u.author||'Team'}</span>
+            <span class="update-time">${u.timestamp||u.date||''}</span>
+          </div>
+          <div class="update-text">${u.text}</div>
+        </div>`).join('')
+    : '<div class="no-updates">No updates yet. Log the first one.</div>';
+
+  const infoBoxes = [];
+  if (d.nextAction) infoBoxes.push(`<div class="info-box" style="background:#FEF3C7;border-left:3px solid #F59E0B;"><div class="info-box-label" style="color:#92400E;">Next Action</div><div class="info-box-text">${d.nextAction}</div></div>`);
+  if (d.notes) infoBoxes.push(`<div class="info-box" style="background:#F9FAFB;border-left:3px solid #9CA3AF;"><div class="info-box-label" style="color:#4B5563;">Notes</div><div class="info-box-text">${d.notes}</div></div>`);
+
+  document.getElementById('detailModal').innerHTML = `
+    <div class="modal-hdr-dark">
+      <div>
+        <div class="modal-title-white">${d.accountName}</div>
+        ${d.opportunityName?`<div class="modal-subtitle">${d.opportunityName}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:10px;">${stageChip(d.dealStage)} ${forecastChip(d.forecastStatus)}</div>
+      </div>
+      <div class="modal-hdr-actions">
+        <button class="btn-outline-white" onclick="closeOverlay('detailOverlay');openEdit('${d.id}')">Edit</button>
+        <button class="modal-close-white" onclick="closeOverlay('detailOverlay')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div>
+          <div class="detail-section-label">Deal Details</div>
+          ${[['Value',fmtVal(d.estimatedValue)],['Close Date',fmtDate(d.expectedCloseDate)],['Owner',d.opportunityOwner||'—'],['Last Contact',fmtDate(d.dateOfLastContact)]].map(([k,v])=>`<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
+        </div>
+        <div>
+          <div class="detail-section-label">Primary Contact</div>
+          ${d.primaryContactName?`
+            <div class="contact-card">
+              <div class="contact-name">${d.primaryContactName}</div>
+              ${d.primaryContactTitle?`<div class="contact-title">${d.primaryContactTitle}</div>`:''}
+              ${d.primaryContactEmail?`<div class="contact-email">✉ ${d.primaryContactEmail}</div>`:''}
+              ${d.primaryContactPhone?`<div class="contact-phone">📞 ${d.primaryContactPhone}</div>`:''}
+            </div>`:'<div class="no-contact">No contact on file</div>'}
+        </div>
+      </div>
+      ${infoBoxes.length?`<div class="info-grid" style="margin-bottom:20px;">${infoBoxes.join('')}</div>`:''}
+      <div class="activity-header">
+        <div class="detail-section-label" style="margin-bottom:0;">Activity Log (${(d.updates||[]).length})</div>
+        <button class="btn-sm btn-update" onclick="closeOverlay('detailOverlay');openUpdate('${d.id}')">+ Log Update</button>
+      </div>
+      <div style="margin-top:12px;" class="activity-log">${updatesHTML}</div>
+    </div>`;
+  openOverlay('detailOverlay');
+}
+
+// ── Form Modal ──
+function openNewDeal() { editingId = null; renderForm({}); openOverlay('formOverlay'); }
+function openEdit(id) { editingId = id; renderForm(deals.find(d=>d.id===id)||{}); openOverlay('formOverlay'); }
+
+function renderForm(d) {
+  const isNew = !editingId;
+  const sel = (opts, val, name) => opts.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('');
+  document.getElementById('formModal').innerHTML = `
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-label">${isNew?'New Opportunity':'Edit Opportunity'}</div>
+        <div class="modal-title">${d.accountName||'New Deal'}</div>
+      </div>
+      <button class="modal-close" onclick="closeOverlay('formOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-label">Deal Information</div>
+      <div class="form-grid">
+        <div class="form-field"><label class="field-label">Account Name <span>*</span></label><input class="field-input" id="f_accountName" value="${d.accountName||''}" placeholder="e.g. Sinclair Broadcasting"></div>
+        <div class="form-field"><label class="field-label">Opportunity Name</label><input class="field-input" id="f_opportunityName" value="${d.opportunityName||''}" placeholder="e.g. T-Commerce Integration"></div>
+        <div class="form-field"><label class="field-label">Forecast Status</label><select class="field-select" id="f_forecastStatus"><option value="">— Select —</option>${sel(FORECASTS,d.forecastStatus)}</select></div>
+        <div class="form-field"><label class="field-label">Deal Stage</label><select class="field-select" id="f_dealStage"><option value="">— Select —</option>${sel(STAGES,d.dealStage)}</select></div>
+        <div class="form-field"><label class="field-label">Expected Close Date</label><input class="field-input" id="f_expectedCloseDate" type="date" value="${d.expectedCloseDate||''}"></div>
+        <div class="form-field"><label class="field-label">Estimated Value ($)</label><input class="field-input" id="f_estimatedValue" type="number" value="${d.estimatedValue||0}" placeholder="0"></div>
+        <div class="form-field full"><label class="field-label">Opportunity Owner</label><select class="field-select" id="f_opportunityOwner"><option value="">— Select —</option>${sel(OWNERS,d.opportunityOwner)}</select></div>
+      </div>
+      <div class="form-section-label">Contact Information</div>
+      <div class="form-grid">
+        <div class="form-field"><label class="field-label">Contact Name</label><input class="field-input" id="f_primaryContactName" value="${d.primaryContactName||''}" placeholder="Full name"></div>
+        <div class="form-field"><label class="field-label">Contact Title</label><input class="field-input" id="f_primaryContactTitle" value="${d.primaryContactTitle||''}" placeholder="Title / Role"></div>
+        <div class="form-field"><label class="field-label">Contact Email</label><input class="field-input" id="f_primaryContactEmail" type="email" value="${d.primaryContactEmail||''}" placeholder="email@domain.com"></div>
+        <div class="form-field"><label class="field-label">Contact Phone</label><input class="field-input" id="f_primaryContactPhone" value="${d.primaryContactPhone||''}" placeholder="(000) 000-0000"></div>
+        <div class="form-field"><label class="field-label">Date of Last Contact</label><input class="field-input" id="f_dateOfLastContact" type="date" value="${d.dateOfLastContact||''}"></div>
+      </div>
+      <div class="form-section-label">Activity & Notes</div>
+      <div class="form-grid">
+        <div class="form-field full"><label class="field-label">Next Action / Follow-Up</label><textarea class="field-textarea" id="f_nextAction" rows="2" placeholder="What's the next step?">${d.nextAction||''}</textarea></div>
+        <div class="form-field full"><label class="field-label">Notes</label><textarea class="field-textarea" id="f_notes" rows="3" placeholder="Risks, blockers, context...">${d.notes||''}</textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeOverlay('formOverlay')">Cancel</button>
+      <button class="btn-save" onclick="saveDeal()">${isNew?'Add Opportunity':'Save Changes'}</button>
+    </div>`;
+}
+
+function saveDeal() {
+  const g = id => document.getElementById(id)?.value||'';
+  const accountName = g('f_accountName').trim();
+  if (!accountName) { alert('Account Name is required.'); return; }
+  const updated = {
+    id: editingId || String(Date.now()),
+    accountName, opportunityName:g('f_opportunityName'),
+    forecastStatus:g('f_forecastStatus'), dealStage:g('f_dealStage'),
+    expectedCloseDate:g('f_expectedCloseDate'), estimatedValue:Number(g('f_estimatedValue'))||0,
+    opportunityOwner:g('f_opportunityOwner'), primaryContactName:g('f_primaryContactName'),
+    primaryContactTitle:g('f_primaryContactTitle'), primaryContactEmail:g('f_primaryContactEmail'),
+    primaryContactPhone:g('f_primaryContactPhone'), dateOfLastContact:g('f_dateOfLastContact'),
+    nextAction:g('f_nextAction'), notes:g('f_notes'),
+    updates: editingId ? (deals.find(d=>d.id===editingId)?.updates||[]) : [],
+  };
+  if (editingId) { const i=deals.findIndex(d=>d.id===editingId); if(i>=0) deals[i]=updated; }
+  else deals.push(updated);
+  saveDeals(); closeOverlay('formOverlay'); renderAll();
+}
+
+function deleteDeal(id) {
+  if (confirm('Remove this opportunity?')) { deals=deals.filter(d=>d.id!==id); saveDeals(); renderAll(); }
+}
+
+// ── Update Modal ──
+function openUpdate(id) {
+  updatingId = id;
+  const d = deals.find(x=>x.id===id);
+  if (!d) return;
+  const prevUpdates = d.updates&&d.updates.length>0
+    ? [...d.updates].reverse().map(u=>`<div class="update-item"><div class="update-meta"><span class="update-author">${u.author||'Team'}</span><span class="update-time">${u.timestamp||u.date||''}</span></div><div class="update-text">${u.text}</div></div>`).join('')
+    : '';
+  const ownerSel = OWNERS.map(o=>`<option value="${o}"${d.opportunityOwner===o?' selected':''}>${o}</option>`).join('');
+  document.getElementById('updateModal').innerHTML = `
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-label">Log Update</div>
+        <div class="modal-title" style="font-size:15px;">${d.accountName}${d.opportunityName?' — '+d.opportunityName:''}</div>
+      </div>
+      <button class="modal-close" onclick="closeOverlay('updateOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label class="field-label">Posted By</label><select class="field-select" id="u_author"><option value="">— Select —</option>${ownerSel}</select></div>
+        <div class="form-field full"><label class="field-label">Update <span style="color:var(--purple);">*</span></label><textarea class="field-textarea" id="u_text" rows="4" placeholder="What happened? What's the status? Any blockers or next steps..."></textarea></div>
+      </div>
+      ${prevUpdates?`<div style="margin-top:16px;"><div class="detail-section-label">Previous Updates</div><div class="activity-log" style="margin-top:12px;">${prevUpdates}</div></div>`:''}
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeOverlay('updateOverlay')">Cancel</button>
+      <button class="btn-save" id="saveUpdateBtn" onclick="saveUpdate()">Post Update</button>
+    </div>`;
+  openOverlay('updateOverlay');
+}
+
+function saveUpdate() {
+  const text = (document.getElementById('u_text')?.value||'').trim();
+  const author = document.getElementById('u_author')?.value||'Team';
+  if (!text) { alert('Please enter an update.'); return; }
+  const i = deals.findIndex(d=>d.id===updatingId);
+  if (i<0) return;
+  const now = new Date();
+  deals[i].updates = deals[i].updates||[];
+  deals[i].updates.push({ id:String(Date.now()), text, author, date:now.toISOString().split('T')[0], timestamp:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) });
+  deals[i].dateOfLastContact = now.toISOString().split('T')[0];
+  saveDeals(); closeOverlay('updateOverlay'); renderAll();
+}
+
+// ── Overlay helpers ──
+function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open')); });
+
+// ── Init ──
+deals = loadDeals();
+renderAll();
+</script>
+</body>
+</html>
